@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, session
 from flask_debugtoolbar import DebugToolbarExtension
 from surveys import satisfaction_survey
 
@@ -6,8 +6,6 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Chizzle'
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 debug = DebugToolbarExtension(app)
-
-responses = []
 
 @app.route('/')
 def start_page():
@@ -17,11 +15,12 @@ def start_page():
 
 @app.route('/survey')
 def start_survey():
-    responses = []
+    session['responses'] = []
     return redirect('/questions/0')
 
 @app.route('/questions/<int:qnum>')
 def show_questuons(qnum):
+    responses = session['responses']
     if responses is None:
         return redirect('/')
     
@@ -38,8 +37,9 @@ def show_questuons(qnum):
 @app.route('/answer', methods = ['post'])
 def record_answer():
     choice = request.form['answer']
+    responses = session['responses']
     responses.append(choice)
-
+    session['responses'] = responses
     if (len(responses) == len(satisfaction_survey.questions)):
         return redirect('/complete')
     else:
